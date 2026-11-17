@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#176b43"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<title>কৃষি ব্যবসা ম্যানেজার</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7f4;color:#18251c;font-family:system-ui,"Noto Sans Bengali",sans-serif}
+header{background:#176b43;color:white;padding:18px 16px}h1{font-size:21px;margin:0 0 4px}header p{margin:0;font-size:13px;opacity:.9}
+nav{display:flex;gap:7px;overflow:auto;padding:10px;background:white;position:sticky;top:0;z-index:2}
+nav button,.btn{border:0;border-radius:9px;padding:10px 13px;background:#e5eee8;color:#17472e;font-weight:600;white-space:nowrap}
+nav button.active,.btn.primary{background:#176b43;color:white}
+main{padding:14px;max-width:950px;margin:auto}.panel{background:white;border-radius:13px;padding:14px;margin:10px 0;box-shadow:0 2px 9px #1020100b}
+h2{font-size:18px;margin:0 0 12px}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.stat{background:#f0f7f2;padding:12px;border-radius:10px}.stat small{color:#64746a}.stat b{display:block;font-size:20px;margin-top:4px}
+label{display:block;font-size:13px;margin:10px 0 5px;color:#425248}input,select{width:100%;padding:11px;border:1px solid #ccd8cf;border-radius:8px;font-size:15px;background:white}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.muted{font-size:12px;color:#68776e}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px}td,th{padding:9px 7px;border-bottom:1px solid #e7ece8;text-align:left;white-space:nowrap}th{background:#f4f8f5}
+.hidden{display:none}.warn{background:#fff8e7;border-left:4px solid #e2a52c;padding:10px;font-size:13px;border-radius:7px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.danger{background:#fae9e7;color:#963b32}.pill{font-size:11px;color:#795b15;background:#fff2d4;border-radius:20px;padding:3px 7px}
+.searchbar{position:sticky;top:57px;z-index:1;background:#f4f7f4;padding:2px 0 6px}.searchbar input{border:2px solid #176b43;border-radius:12px;padding:12px 14px;font-size:16px}.sr h3{font-size:14px;margin:12px 0 6px;color:#176b43}.sr p{margin:0;padding:7px 0;border-bottom:1px solid #e7ece8;font-size:14px}
+@media(min-width:650px){.stats{grid-template-columns:repeat(4,1fr)}}
+</style></head><body>
+<header><h1>🌱 কৃষি ব্যবসা ম্যানেজার</h1><p>পণ্য • বিক্রি • স্টক • বাকি • খরচ • লাভ</p></header>
+<nav id="nav"><button class="active" data-tab="home">ড্যাশবোর্ড</button><button data-tab="products">পণ্যের তালিকা</button><button data-tab="sale">বিক্রি</button><button data-tab="expenses">খরচ</button><button data-tab="due">বাকি</button></nav>
+<main>
+<div class="searchbar"><input id="q" type="search" placeholder="🔍 সব সার্চ করুন: পণ্য, ক্রেতা, খরচ..." oninput="doSearch()"></div>
+<div id="searchResults" class="panel sr hidden"></div>
+<section id="home">
+<div class="stats">
+<div class="stat"><small>মোট বিক্রি</small><b id="sSales">৳০</b></div>
+<div class="stat"><small>মোট খরচ</small><b id="sExpense">৳০</b></div>
+<div class="stat"><small>বাকি</small><b id="sDue">৳০</b></div>
+<div class="stat"><small>আনুমানিক লাভ</small><b id="sProfit">৳০</b></div>
+</div>
+<div class="panel"><h2>আজকের সারাংশ</h2><div id="summary" class="muted">এখনো কোনো বিক্রির তথ্য নেই।</div></div>
+<div class="panel"><h2>ডেটা ব্যাকআপ</h2><p class="muted">এই সংস্করণে তথ্য এই ফোনের ব্রাউজারে সংরক্ষিত হবে। ব্রাউজারের ডেটা মুছে ফেললে তথ্য হারাতে পারে। নিয়মিত ব্যাকআপ নিন।</p>
+<div class="actions"><button class="btn primary" onclick="backup()">ব্যাকআপ ডাউনলোড</button><label class="btn" style="margin:0">ব্যাকআপ ফিরিয়ে আনুন<input type="file" accept="application/json" onchange="restore(event)" style="display:none"></label></div></div>
+</section>
+<section id="products" class="hidden"><div class="panel"><h2>পণ্যের তালিকা ও স্টক</h2><p class="muted">ইনভয়েসে পাওয়া রেট রাখা হয়েছে। স্টক আপাতত ০; আপনি পরে স্টক যোগ করবেন।</p>
+<div class="tablewrap"><table><thead><tr><th>পণ্য</th><th>ইনভয়েস রেট</th><th>৫% কম রেফারেন্স</th><th>স্টক</th><th>বিক্রয় মূল্য</th><th></th></tr></thead><tbody id="productRows"></tbody></table></div>
+</div><div class="panel"><h2>নতুন পণ্য / স্টক আপডেট</h2><label>পণ্যের নাম</label><input id="pName" placeholder="পণ্যের নাম"><div class="row"><div><label>ক্রয়/ইনভয়েস রেট</label><input id="pCost" type="number" min="0"></div><div><label>বর্তমান স্টক</label><input id="pStock" type="number" min="0" value="0"></div></div><label>বিক্রয় মূল্য (প্রতি ইউনিট)</label><input id="pSell" type="number" min="0" placeholder="বিক্রির দাম"><button class="btn primary" onclick="addProduct()">পণ্য যোগ করুন</button></div></section>
+<section id="sale" class="hidden"><div class="panel"><h2>নতুন বিক্রি লিখুন</h2><label>পণ্য</label><select id="saleProduct"></select><div class="row"><div><label>পরিমাণ</label><input id="saleQty" type="number" min="1" value="1"></div><div><label>প্রতি ইউনিট বিক্রয় মূল্য</label><input id="salePrice" type="number" min="0"></div></div><div class="row"><div><label>ক্রেতার নাম</label><input id="buyer" placeholder="নাম"></div><div><label>জমা টাকা</label><input id="paid" type="number" min="0" value="0"></div></div><button class="btn primary" onclick="recordSale()">বিক্রি সংরক্ষণ</button><p class="muted" id="saleHint"></p></div><div class="panel"><h2>বিক্রির ইতিহাস</h2><div class="tablewrap"><table><thead><tr><th>তারিখ</th><th>পণ্য</th><th>ক্রেতা</th><th>মোট</th><th>জমা</th><th>বাকি</th><th>লাভ</th></tr></thead><tbody id="saleRows"></tbody></table></div></div></section>
+<section id="expenses" class="hidden"><div class="panel"><h2>খরচ যোগ করুন</h2><label>খরচের ফোল্ডার / খাত</label><input id="expCat" placeholder="যেমন: দোকান ভাড়া, যাতায়াত, বেতন"><label>বিবরণ</label><input id="expDesc" placeholder="খরচের বিবরণ"><label>টাকার পরিমাণ</label><input id="expAmount" type="number" min="0"><button class="btn primary" onclick="addExpense()">খরচ সংরক্ষণ</button></div><div class="panel"><h2>খরচের তালিকা</h2><div id="expenseRows"></div></div></section>
+<section id="due" class="hidden"><div class="panel"><h2>ক্রেতাভিত্তিক বাকি হিসাব</h2><div class="tablewrap"><table><thead><tr><th>ক্রেতা</th><th>বাকি</th></tr></thead><tbody id="dueRows"></tbody></table></div></div></section>
+</main>
+<script>
+const initial = [{"name": "Abastar 50 gm", "invoiceRate": 250}, {"name": "Amistar top 50 ml", "invoiceRate": 202}, {"name": "Amistar top 100ml", "invoiceRate": 397}, {"name": "Amistar top 500ml", "invoiceRate": 1720}, {"name": "Askor 50ml", "invoiceRate": 158}, {"name": "Bingo 500gm", "invoiceRate": 327}, {"name": "Biplob 50ml", "invoiceRate": 65}, {"name": "Biplob 100ml", "invoiceRate": 125}, {"name": "Biplob 500ml", "invoiceRate": 585}, {"name": "Blastguard 28 SC 50ml", "invoiceRate": 133}, {"name": "Blastguard 28 SC 100ml", "invoiceRate": 260}, {"name": "Blastguard 28 SC 500ml", "invoiceRate": 1270}, {"name": "Blastgurd 100ml", "invoiceRate": 260}, {"name": "Blastgurd 500ml", "invoiceRate": 1270}, {"name": "Bondhu Sprayer Machine 2-in-1 16L", "invoiceRate": 3350}, {"name": "Chelated Zinc Chamak 17gm", "invoiceRate": 16.74}, {"name": "Filiya 50 ml", "invoiceRate": 150}, {"name": "Gibberellic Acid Shobib 10gm", "invoiceRate": 72}, {"name": "Grogin 1kg", "invoiceRate": 327}, {"name": "Magma 2kg", "invoiceRate": 265}, {"name": "Mask 100gm", "invoiceRate": 115}, {"name": "Mask 500gm", "invoiceRate": 535}, {"name": "Meghmoni 1kg", "invoiceRate": 310}, {"name": "Monozink 1kg", "invoiceRate": 237}, {"name": "Plenam 50gm", "invoiceRate": 265}, {"name": "Poster 10gm", "invoiceRate": 85}, {"name": "Postet 30gm", "invoiceRate": 237}, {"name": "Ridomil 100gm", "invoiceRate": 177}, {"name": "Rifit 100ml", "invoiceRate": 132}, {"name": "Sobikron 50ml", "invoiceRate": 115}, {"name": "Super Potash 25gm", "invoiceRate": 70}, {"name": "Taja 100gm", "invoiceRate": 36}, {"name": "Taja 500gm", "invoiceRate": 196}, {"name": "Thayafram 100 gm", "invoiceRate": 235}, {"name": "Thayafram 300gm", "invoiceRate": 675}, {"name": "Tilt 50ml", "invoiceRate": 158}, {"name": "Voliom flexi 50ml", "invoiceRate": 335}, {"name": "Warmkilar 50ml", "invoiceRate": 40}, {"name": "Warmkilar 100ml", "invoiceRate": 70}, {"name": "Warmkilar 500ml", "invoiceRate": 310}, {"name": "Wide Out 18 WP 50gm", "invoiceRate": 34}, {"name": "Wide Out 18 WP 100gm", "invoiceRate": 63}];
+let db=JSON.parse(localStorage.getItem('krishiManagerDB')||'null')||{products:initial.map((p,i)=>({...p,id:i+1,stock:0,sellPrice:0,cost:p.invoiceRate*.95})),sales:[],expenses:[]};
+if(db.listVer!==2){db.products=initial.map((p,i)=>({...p,id:i+1,stock:0,sellPrice:0,cost:p.invoiceRate*.95}));db.listVer=2;localStorage.setItem('krishiManagerDB',JSON.stringify(db))}
+let q='',curTab='home';
+function m(...a){return !q||a.join(' ').toLowerCase().includes(q)}
+function doSearch(){q=document.getElementById('q').value.trim().toLowerCase();render()}
+function save(){localStorage.setItem('krishiManagerDB',JSON.stringify(db));render()}
+function money(n){return '৳'+Number(n||0).toLocaleString('en-BD',{maximumFractionDigits:2})}
+function tab(t){curTab=t;document.querySelectorAll('main section').forEach(s=>s.classList.add('hidden'));document.getElementById(t).classList.remove('hidden');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));render()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+function addProduct(){let name=pName.value.trim(),rate=+pCost.value,stock=+pStock.value,sell=+pSell.value;if(!name||rate<0||!Number.isFinite(rate)){alert('পণ্যের নাম ও সঠিক রেট দিন');return}db.products.push({id:Date.now(),name,invoiceRate:rate,cost:rate*.95,stock,sellPrice:sell});pName.value=pCost.value=pSell.value='';pStock.value=0;save()}
+function recordSale(){let id=+saleProduct.value,p=db.products.find(x=>x.id===id),q=+saleQty.value,price=+salePrice.value,paidAmt=+paid.value;if(!p||q<=0||price<0){alert('সঠিক পণ্য, পরিমাণ ও দাম দিন');return}if(q>p.stock){alert('স্টক যথেষ্ট নেই। আগে পণ্যের স্টক আপডেট করুন।');return}let total=q*price;if(paidAmt>total){alert('জমা টাকা মোট বিক্রির বেশি হতে পারবে না');return}let profit=q*(price-p.cost);p.stock-=q;p.sellPrice=price;db.sales.unshift({date:new Date().toLocaleDateString('bn-BD'),name:p.name,buyer:buyer.value.trim()||'নাম দেওয়া হয়নি',qty:q,total,paid:paidAmt,due:total-paidAmt,profit});buyer.value='';paid.value=0;saleQty.value=1;save();alert('বিক্রি সংরক্ষণ হয়েছে')}
+function addExpense(){let cat=expCat.value.trim()||'অন্যান্য',desc=expDesc.value.trim(),amount=+expAmount.value;if(!amount||amount<0){alert('খরচের সঠিক পরিমাণ দিন');return}db.expenses.unshift({date:new Date().toLocaleDateString('bn-BD'),cat,desc,amount});expDesc.value=expAmount.value='';save()}
+function render(){
+productRows.innerHTML=(db.products.filter(p=>m(p.name,p.note)).map(p=>`<tr><td>${esc(p.name)} ${p.note?'<span class="pill">যাচাই</span>':''}<div class="muted">${esc(p.note||'')}</div></td><td>${money(p.invoiceRate)}</td><td>${money(p.cost)}</td><td><input aria-label="স্টক" type="number" min="0" value="${p.stock}" style="width:75px;padding:6px" onchange="updateStock(${p.id},this.value)"></td><td><input aria-label="বিক্রয় মূল্য" type="number" min="0" value="${p.sellPrice||''}" placeholder="দাম" style="width:90px;padding:6px" onchange="updateSell(${p.id},this.value)"></td><td><button class="btn danger" onclick="removeProduct(${p.id})">বাদ</button></td></tr>`).join('')||'<tr><td colspan="6">কিছু পাওয়া যায়নি</td></tr>');
+let keepSel=saleProduct.value;
+saleProduct.innerHTML=db.products.filter(p=>m(p.name)).map(p=>`<option value="${p.id}">${esc(p.name)} — স্টক ${p.stock}</option>`).join('');
+if([...saleProduct.options].some(o=>o.value===keepSel))saleProduct.value=keepSel;
+let p=db.products.find(x=>x.id===+saleProduct.value);if(p){salePrice.value=p.sellPrice||'';saleHint.textContent='ক্রয় হিসাবের জন্য ইনভয়েস রেটের ৫% কম ধরে রেফারেন্স কস্ট রাখা হয়েছে; প্রয়োজন হলে পণ্যের রেট সংশোধন করুন।'}
+saleRows.innerHTML=(db.sales.filter(s=>m(s.name,s.buyer,s.date)).map(s=>`<tr><td>${s.date}</td><td>${esc(s.name)} × ${s.qty}</td><td>${esc(s.buyer)}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(s.due)}</td><td>${money(s.profit)}</td></tr>`).join('')||'<tr><td colspan="7">কিছু পাওয়া যায়নি</td></tr>');
+expenseRows.innerHTML=db.expenses.filter(e=>m(e.cat,e.desc,e.date)).map(e=>`<p><b>${esc(e.cat)}</b> — ${esc(e.desc)} <span style="float:right">${money(e.amount)}</span><br><span class="muted">${e.date}</span></p>`).join('')||(q?'কিছু পাওয়া যায়নি':'এখনো খরচ যোগ করা হয়নি');
+let dueMap={};db.sales.forEach(s=>{if(s.due>0)dueMap[s.buyer]=(dueMap[s.buyer]||0)+s.due});dueRows.innerHTML=Object.entries(dueMap).filter(([n])=>m(n)).map(([n,v])=>`<tr><td>${esc(n)}</td><td>${money(v)}</td></tr>`).join('')||'<tr><td colspan="2">'+(q?'কিছু পাওয়া যায়নি':'কোনো বাকি নেই')+'</td></tr>';
+const sr=document.getElementById('searchResults');
+if(q&&curTab==='home'){let P=db.products.filter(p=>m(p.name,p.note)),S=db.sales.filter(s=>m(s.name,s.buyer,s.date)),E=db.expenses.filter(e=>m(e.cat,e.desc,e.date)),D=Object.entries(dueMap).filter(([n])=>m(n));
+sr.innerHTML='<h2>সার্চ ফলাফল</h2>'+(P.length?'<h3>পণ্য ('+P.length+')</h3>'+P.map(p=>`<p>${esc(p.name)}<span style="float:right">স্টক ${p.stock} • ${money(p.sellPrice||p.invoiceRate)}</span></p>`).join(''):'')+(S.length?'<h3>বিক্রি ('+S.length+')</h3>'+S.slice(0,20).map(s=>`<p>${esc(s.name)} × ${s.qty} — ${esc(s.buyer)}<span style="float:right">${money(s.total)}</span></p>`).join(''):'')+(D.length?'<h3>বাকি ('+D.length+')</h3>'+D.map(([n,v])=>`<p>${esc(n)}<span style="float:right">${money(v)}</span></p>`).join(''):'')+(E.length?'<h3>খরচ ('+E.length+')</h3>'+E.map(e=>`<p>${esc(e.cat)} — ${esc(e.desc)}<span style="float:right">${money(e.amount)}</span></p>`).join(''):'');
+if(!P.length&&!S.length&&!D.length&&!E.length)sr.innerHTML='<h2>সার্চ ফলাফল</h2><p class="muted">কিছু পাওয়া যায়নি</p>';sr.classList.remove('hidden')}else sr.classList.add('hidden');
+let sales=db.sales.reduce((a,s)=>a+s.total,0),exp=db.expenses.reduce((a,e)=>a+e.amount,0),due=db.sales.reduce((a,s)=>a+s.due,0),profit=db.sales.reduce((a,s)=>a+s.profit,0)-exp;
+sSales.textContent=money(sales);sExpense.textContent=money(exp);sDue.textContent=money(due);sProfit.textContent=money(profit);summary.textContent=`মোট ${db.sales.length}টি বিক্রি, ${db.expenses.length}টি খরচের এন্ট্রি। মোট বিক্রির লাভ থেকে খরচ বাদ দিয়ে আনুমানিক ফল দেখানো হয়েছে।`;
+}
+function updateStock(id,v){let p=db.products.find(x=>x.id===id);p.stock=Math.max(0,+v||0);save()}
+function updateSell(id,v){let p=db.products.find(x=>x.id===id);p.sellPrice=Math.max(0,+v||0);save()}
+function removeProduct(id){if(confirm('পণ্যটি তালিকা থেকে বাদ দেবেন?')){db.products=db.products.filter(p=>p.id!==id);save()}}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function backup(){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.href=u;a.download='krishi-business-backup.json';a.click();URL.revokeObjectURL(u)}
+function restore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!d.products||!d.sales||!d.expenses)throw 0;db=d;save();alert('ব্যাকআপ ফিরিয়ে আনা হয়েছে')}catch(_){alert('ফাইলটি সঠিক ব্যাকআপ নয়')}};r.readAsText(f)}
+render();saleProduct.addEventListener('change',()=>{let p=db.products.find(x=>x.id===+saleProduct.value);salePrice.value=p?.sellPrice||''})
+</script><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script></body></html>
